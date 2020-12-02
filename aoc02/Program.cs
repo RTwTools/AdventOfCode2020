@@ -11,29 +11,45 @@ namespace aoc02
     {
       var passwords = File.ReadAllLines("input.txt").Select(Password.Parse);
 
-      Console.WriteLine($"Part 1: the number of valid passwords is {passwords.Count(p => p.Valid)}.");
+      Console.WriteLine($"Part 1: the number of valid passwords is {passwords.Count(p => p.ValidPart1)}.");
+      Console.WriteLine($"Part 2: the number of valid passwords is {passwords.Count(p => p.ValidPart2)}.");
     }
 
     class Password
     {
       public string Data { get; set; }
-      public char RepeatedCharacter { get; set; }
-      public int MinimalOccurences { get; set; }
-      public int MaximalOccurences { get; set; }
-      public bool Valid
+      public char Character { get; set; }
+      public int First { get; set; }
+      public int Second { get; set; }
+
+      public bool ValidPart1
       {
         get
         {
-          int count = Data?.Count(x => x == RepeatedCharacter) ?? 0;
-          return (Data != null) && (count >= MinimalOccurences) && (count <= MaximalOccurences);
+          int count = Data?.Count(x => x == Character) ?? 0;
+          return (Data != null) && (count >= First) && (count <= Second);
+        }
+      }
+
+      public bool ValidPart2
+      {
+        get
+        {
+          var bools = new[]
+          {
+            (Data[First - 1] == Character),
+            (Data[Second - 1] == Character)
+          };
+
+          return bools.Count(b => b) == 1;
         }
       }
 
       public Password(int min, int max, char @char, string data)
       {
-        MinimalOccurences = min;
-        MaximalOccurences = max;
-        RepeatedCharacter = @char;
+        First = min;
+        Second = max;
+        Character = @char;
         Data = data;
       }
 
