@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 
 namespace aoc03
 {
@@ -11,7 +12,17 @@ namespace aoc03
       var grid = new Grid(File.ReadAllLines("input.txt"));
 
       Console.WriteLine($"Part 1: the number of encountered trees is {grid.TravelGetNumberOfTrees(new Point(), new Size(3,1))}.");
-      //Console.WriteLine($"Part 2: the number of valid passwords is {passwords.Count(p => p.ValidPart2)}.");
+
+      long numberOfTrees = new long[]
+      {
+        grid.TravelGetNumberOfTrees(new Point(), new Size(1,1)),
+        grid.TravelGetNumberOfTrees(new Point(), new Size(3,1)),
+        grid.TravelGetNumberOfTrees(new Point(), new Size(5,1)),
+        grid.TravelGetNumberOfTrees(new Point(), new Size(7,1)),
+        grid.TravelGetNumberOfTrees(new Point(), new Size(1,2))
+      }.Aggregate((a, x) => a * x);
+
+      Console.WriteLine($"Part 2: the number of encountered trees is {numberOfTrees}.");
     }
 
     public class Grid
