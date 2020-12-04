@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace aoc04
 {
@@ -11,9 +12,71 @@ namespace aoc04
     {
       var passports = Passport.parseList(File.ReadAllLines("input.txt"));
 
-      var requiredFields = new[] { "byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid" };
+      Console.WriteLine($"Part 1: the number of valid passports is {passports.Count(p => p.IsValid(new Part1Validation()))}.");
+      Console.WriteLine($"Part 2: the number of valid passports is {passports.Count(p => p.IsValid(new Part2Validation()))}.");
+    }
+  }
 
-      Console.WriteLine($"Part 1: the number of valid passports is {passports.Count(p => p.IsValid(requiredFields))}.");
+  public interface IPassportValidation
+  {
+    public bool Check(Passport passport);
+  }
+
+  public class Part1Validation : IPassportValidation
+  {
+    public static IEnumerable<string> RequiredFields => new[] { "byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid" };
+
+    public virtual bool Check(Passport passport)
+    {
+      return RequiredFields.All(r => passport.Data.Keys.Contains(r));
+    }
+  }
+
+  public class Part2Validation : Part1Validation
+  {
+    public override bool Check(Passport passport)
+    {
+      bool valid = base.Check(passport);
+
+      if (valid)
+      {
+        if (int.TryParse(passport.Data["byr"], out int birthYear) &&
+          int.TryParse(passport.Data["iyr"], out int issueYear) &&
+          int.TryParse(passport.Data["eyr"], out int expirationYear))
+        {
+          valid &= (birthYear >= 1920) && (birthYear <= 2002);
+          valid &= (issueYear >= 2010) && (issueYear <= 2020);
+          valid &= (expirationYear >= 2020) && (expirationYear <= 2030);
+        }
+        else
+        {
+          valid = false;
+        }
+
+        string height = passport.Data["hgt"];
+        if (height.EndsWith("cm"))
+        {
+          int heightCm = int.Parse(height[0..^2]);
+          valid &= (heightCm >= 150) && (heightCm <= 193);
+        }
+        else if (height.EndsWith("in"))
+        {
+          int heighIn = int.Parse(height[0..^2]);
+          valid &= (heighIn >= 59) && (heighIn <= 76);
+        }
+        else
+        {
+          valid = false;
+        }
+
+        valid &= new[] { "amb", "blu", "brn", "gry", "grn", "hzl", "oth" }
+          .Any(x => x == passport.Data["ecl"]);
+
+        valid &= Regex.IsMatch(passport.Data["hcl"], @"^#(\d|[a-f]){6}$");
+        valid &= Regex.IsMatch(passport.Data["pid"], @"^\d{9}$");
+      }
+
+      return valid;
     }
   }
 
@@ -26,9 +89,9 @@ namespace aoc04
       Data = data;
     }
 
-    public bool IsValid(IEnumerable<string> requiredFields)
+    public bool IsValid(IPassportValidation validation)
     {
-      return requiredFields.All(r => Data.Keys.Contains(r));
+      return validation.Check(this);
     }
 
     public static Passport Parse(IEnumerable<string> data)
@@ -77,5 +140,3 @@ namespace aoc04
     }
   }
 }
-
-
