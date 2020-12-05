@@ -8,9 +8,21 @@ namespace aoc05
   {
     public static void Main()
     {
-      var seats = File.ReadAllLines("input.txt").Select(Seat.Parse);
+      var seats = File.ReadAllLines("input.txt").Select(Seat.Parse).OrderBy(s => s.Id).ToList();
 
-      Console.WriteLine($"Part 1: the highest seat ID is {seats.Max(s => s.Id)}.");
+      Console.WriteLine($"Part 1: the highest seat ID is {seats.Last().Id}.");
+
+      var seatId = seats[0].Id;
+
+      for (int i = 1; i < seats.Count; i++)
+      {
+        if (seats[i].Id == seatId + 2)
+        {
+          Console.WriteLine($"Part 2: the ID of my seat is {seats[i].Id - 1}.");
+          break;
+        }
+        seatId = seats[i].Id;
+      }
     }
   }
 
@@ -22,7 +34,7 @@ namespace aoc05
     {
       (int, int) rowRange = (0, 127);
 
-      foreach (var direction in data[0..6])
+      foreach (var direction in data[0..7])
       {
         rowRange = Split(rowRange, (direction == 'F') ? PartToKeep.First : PartToKeep.Last);
       }
@@ -43,11 +55,11 @@ namespace aoc05
       Last
     }
 
-    private static (int start, int end) Split((int start, int end) range, PartToKeep halfToKeep)
+    private static (int start, int end) Split((int start, int end) range, PartToKeep partToKeep)
     {
       var size = (range.end - range.start) + 1;
 
-      if (PartToKeep.First == halfToKeep)
+      if (PartToKeep.First == partToKeep)
       {
         return (range.start, range.end - (size / 2));
       }
