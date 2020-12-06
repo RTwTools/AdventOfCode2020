@@ -12,10 +12,11 @@ namespace aoc06
       var forms = DeclarationForm.ParseMultiple(File.ReadAllLines("input.txt"));
 
       Console.WriteLine($"Part 1: the sum is {forms.Sum(f => f.Answers.Values.Count)}.");
+      Console.WriteLine($"Part 2: the sum is {forms.Sum(f => f.Answers.Values.Where(c => c == f.GroupSize).Count())}.");
     }
   }
 
-  public record DeclarationForm(Dictionary<char, int> Answers)
+  public record DeclarationForm(Dictionary<char, int> Answers, int GroupSize)
   {
 
     public static DeclarationForm Parse(IEnumerable<string> data)
@@ -37,7 +38,7 @@ namespace aoc06
         }
       }
 
-      return new DeclarationForm(answers);
+      return new DeclarationForm(answers, data.Count());
     }
 
     public static IEnumerable<DeclarationForm> ParseMultiple(string[] data)
