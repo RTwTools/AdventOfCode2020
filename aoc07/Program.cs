@@ -9,16 +9,33 @@ namespace aoc07
   {
     public static void Main()
     {
-      var data = Bag.ParseMultiple(File.ReadAllLines("input.txt"));
+      var bags = Bag.ParseMultiple(File.ReadAllLines("input.txt"));
+      var bagName = "shiny gold";
 
-
-      Console.WriteLine($"Part 1: the number of bags is {data["shiny gold"].UniqueParents(new HashSet<string>())}.");
+      Console.WriteLine($"Part 1: the number of bags is {bags[bagName].UniqueParents(new HashSet<string>())}.");
+      Console.WriteLine($"Part 2: the number of bags is {bags[bagName].TotalChildren}.");
     }
 
     public record Bag(string Name)
     {
       public IList<Bag> Parents { get; set; } = new List<Bag>();
       public IList<Bag> Children { get; set; } = new List<Bag>();
+
+      public int TotalChildren
+      {
+        get
+        {
+          int count = 0;
+          count += Children.Count;
+
+          foreach (var child in Children)
+          {
+            count += child.TotalChildren;
+          }
+
+          return count;
+        }
+      }
 
       public int UniqueParents(HashSet<string> parents)
       {
