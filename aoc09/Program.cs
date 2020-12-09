@@ -9,14 +9,15 @@ namespace aoc09
   {
     public static void Main()
     {
-      var numbers = File.ReadAllLines("input.txt").Select(long.Parse).ToList();
-      var counter = new Counter(25, numbers);
+      var xmas = new Xmas(25, File.ReadAllLines("input.txt").Select(long.Parse).ToList());
+      var error = xmas.GetError();
 
-      Console.WriteLine($"Part 1: the first number that does not have this property is {counter.GetError()}.");
+      Console.WriteLine($"Part 1: the first number that does not have this property is {error}.");
+      Console.WriteLine($"Part 2: the encryption weaknessd in the XMAS-encrypted list is {xmas.GetWeakness(error)}.");
     }
   }
 
-  public record Counter(int PreambleSize, IList<long> Numbers)
+  public record Xmas(int PreambleSize, IList<long> Numbers)
   {
     public long GetError()
     {
@@ -47,6 +48,33 @@ namespace aoc09
         else
         {
           index++;
+        }
+      }
+    }
+
+    public long GetWeakness(long number)
+    {
+      int index = 0;
+
+      while (true)
+      {
+        
+        long count = 0;
+
+        for (int i = index; i < Numbers.Count; i++)
+        {
+          count += Numbers[i];
+
+          if (count == number)
+          {
+            var range = Numbers.ToList().GetRange(index, i - index);
+            return  range.Min() + range.Max();
+          }
+          else if (count > number)
+          {
+            index++;
+            break;
+          }
         }
       }
     }
