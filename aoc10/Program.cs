@@ -9,18 +9,19 @@ namespace aoc10
   {
     public static void Main()
     {
-      var joltAdapter = JoltAdapter.Parse(File.ReadAllLines("input.txt").Select(int.Parse));
+      var joltAdapter = JoltAdapter.Parse(File.ReadAllLines("input.txt").Select(long.Parse));
 
       Console.WriteLine($"Part 1: the counts (offsets of 1 and 3) multiplied is: " +
         $"{joltAdapter.AdaptersWithXOffsetCount(1) * joltAdapter.AdaptersWithXOffsetCount(3)}.");
+      Console.WriteLine($"Part 2: the number of options is {joltAdapter.NumberOfConnectionOptions}");
     }
 
-    public record JoltAdapter(IList<int> Adapters)
+    public record JoltAdapter(IList<long> Adapters)
     {
-      public int AdaptersWithXOffsetCount(int offset)
+      public long AdaptersWithXOffsetCount(long offset)
       {
-        int count = 0;
-        int lastJolt = 0;
+        long count = 0;
+        long lastJolt = 0;
 
         foreach (var adapter in Adapters)
         {
@@ -40,11 +41,62 @@ namespace aoc10
         return count;
       }
 
-      public static JoltAdapter Parse(IEnumerable<int> data)
+      public long NumberOfConnectionOptions
       {
-        IList<int> adapters = new List<int>();
+        get
+        {
+          long count = 0;
+          long lastAdapter = Adapters.Last();
+          var options = new Dictionary<long, long> { { 0, 1 } };
+          var newOptions = new Dictionary<long, long>();
 
-        int jolt = 0;
+          do
+          {
+            foreach (var option in options)
+            {
+              foreach (var adapter in Adapters)
+              {
+                if (adapter > option.Key && adapter <= option.Key + 3)
+                {
+                  if (newOptions.ContainsKey(adapter))
+                  {
+                    newOptions[adapter] += option.Value;
+                  }
+                  else
+                  {
+                    newOptions.Add(adapter, option.Value);
+                  }
+                }
+                else if (adapter > option.Key + 3)
+                {
+                  break;
+                }
+              }
+            }
+
+            if (newOptions.Any() == true)
+            {
+              if (newOptions.ContainsKey(lastAdapter))
+              {
+                count += newOptions[lastAdapter];
+                newOptions.Remove(lastAdapter);
+              }
+
+              options = newOptions.ToDictionary(i => i.Key, i => i.Value);
+              newOptions.Clear();
+            }
+          }
+          while (options.Any());
+
+          return count;
+        }
+      }
+
+      public static JoltAdapter Parse(IEnumerable<long> data)
+      {
+        var adapters = new List<long>();
+
+        long jolt = 0;
 
         foreach (var adapter in data.OrderBy(i => i))
         {
