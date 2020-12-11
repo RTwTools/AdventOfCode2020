@@ -11,53 +11,79 @@ namespace aoc11
     public static void Main()
     {
       var ferry = new Ferry(File.ReadAllLines("input.txt"));
-
-      while (ferry.UpdateLayout()) ;
+      while (ferry.UpdateLayoutPart1()) ;
 
       Console.WriteLine($"Part 1: the number of occupied seats is {ferry.OccupiedSeats}");
+
+      ferry = new Ferry(File.ReadAllLines("input.txt"));
+      while (ferry.UpdateLayoutPart2()) ;
+
+      Console.WriteLine($"Part 2: the number of occupied seats is {ferry.OccupiedSeats}");
     }
 
     public class Ferry
     {
-      public string[] Seats { get; set; }
+      private string[] Grid { get; set; }
 
-      public int OccupiedSeats 
+      private Size[] Neighbors { get; } = new[]
+      {
+        new Size(-1, -1),
+        new Size(-1, 0),
+        new Size(-1, 1),
+        new Size(0, -1),
+        new Size(0, 1),
+        new Size(1, -1),
+        new Size(1, 0),
+        new Size(1, 1)
+      };
+
+      public int OccupiedSeats
       {
         get
         {
-          return Seats.Sum(row => row.Count(location => location == '#'));
+          return Grid.Sum(row => row.Count(location => location == '#'));
         }
       }
 
       public Ferry(string[] seats)
       {
-        Seats = seats;
+        Grid = seats;
       }
 
-      public bool UpdateLayout()
+      public bool UpdateLayoutPart1()
+      {
+        return UpdateLayout(4, (Point current, Size direction) => IsOccupied(current + direction));
+      }
+
+      public bool UpdateLayoutPart2()
+      {
+        return UpdateLayout(5, (Point current, Size direction) => SeesOccupied(current, direction));
+      }
+
+      private bool UpdateLayout(int tolerance, Func<Point, Size, bool> neighborIsOccupied)
       {
         var newSeats = new List<string>();
 
-        for (int y = 0; y < Seats.Length; y++)
+        for (int y = 0; y < Grid.Length; y++)
         {
           string row = string.Empty;
 
-          for (int x = 0; x < Seats[y].Length; x++)
+          for (int x = 0; x < Grid[y].Length; x++)
           {
             var location = new Point(x, y);
             if (IsSeat(location))
             {
-              var count = CountOccupiedNeighbors(location);
+              var count = CountOccupiedNeighbors(location, neighborIsOccupied);
 
               if (IsOccupied(location))
               {
-                if (count >= 4)
+                if (count >= tolerance)
                 {
                   row += "L";
                 }
                 else
                 {
-                  row += Seats[y][x];
+                  row += Grid[y][x];
                 }
               }
               else
@@ -68,7 +94,7 @@ namespace aoc11
                 }
                 else
                 {
-                  row += Seats[y][x];
+                  row += Grid[y][x];
                 }
               }
             }
@@ -81,76 +107,67 @@ namespace aoc11
           newSeats.Add(row);
         }
 
-        var changed = (newSeats.SequenceEqual(Seats) == false);
-        Seats = newSeats.ToArray();
+        var changed = (newSeats.SequenceEqual(Grid) == false);
+        Grid = newSeats.ToArray();
         return changed;
       }
 
 
-        public int CountOccupiedNeighbors(Point seat)
+      private bool IsValid(Point location)
+      {
+        return (location.X >= 0) && (location.X < Grid[0].Length) &&
+          (location.Y >= 0) && (location.Y < Grid.Length);
+      }
+
+      private int CountOccupiedNeighbors(Point seat, Func<Point, Size, bool> neighborIsOccupied)
+      {
+        return Neighbors.Count(n => neighborIsOccupied(seat, n));
+      }
+
+      private bool IsFree(Point location)
+      {
+        return IsValid(location) && GetStatus(location) == 'L';
+      }
+
+      private bool IsOccupied(Point location)
+      {
+        return IsValid(location) && GetStatus(location) == '#';
+      }
+
+      private bool SeesOccupied(Point seat, Size direction)
+      {
+        var location = seat + direction;
+
+        while (IsValid(location))
         {
-          var neighbors = new List<bool>();
-          (int x, int y) = (seat.X, seat.Y);
-
-          if (x - 1 >= 0)
+          if (IsFree(location))
           {
-            if (y - 1 >= 0)
-            {
-              neighbors.Add(IsOccupied(new Point(x - 1, y - 1)));
-            }
-
-            neighbors.Add(IsOccupied(new Point(x - 1, y)));
-
-            if (y + 1 < Seats.Length)
-            {
-              neighbors.Add(IsOccupied(new Point(x - 1, y + 1)));
-            }
+            return false;
           }
-
-          if (y - 1 >= 0)
+          else if (IsOccupied(location))
           {
-            neighbors.Add(IsOccupied(new Point(x, y - 1)));
+            return true;
           }
-
-          if (y + 1 < Seats.Length)
+          else
           {
-            neighbors.Add(IsOccupied(new Point(x, y + 1)));
+            location += direction;
           }
-
-          if (x + 1 < Seats[y].Length)
-          {
-            if (y - 1 >= 0)
-            {
-              neighbors.Add(IsOccupied(new Point(x + 1, y - 1)));
-            }
-
-            neighbors.Add(IsOccupied(new Point(x + 1, y)));
-
-            if (y + 1 < Seats.Length)
-            {
-              neighbors.Add(IsOccupied(new Point(x + 1, y + 1)));
-            }
-          }
-
-          return neighbors.Count(s => s);
         }
 
-        public bool IsOccupied(Point seat)
-        {
-          return GetLocation(seat) == '#';
-        }
+        return false;
+      }
 
-        public bool IsSeat(Point seat)
-        {
-          var location = GetLocation(seat);
-          return (location == 'L' || location == '#');
-        }
+      private bool IsSeat(Point location)
+      {
+        var status = GetStatus(location);
+        return (status == 'L' || status == '#');
+      }
 
-        private char GetLocation(Point point)
-        {
-          var row = Seats[point.Y];
-          return row[point.X];
-        }
+      private char GetStatus(Point location)
+      {
+        var row = Grid[location.Y];
+        return row[location.X];
       }
     }
   }
+}
