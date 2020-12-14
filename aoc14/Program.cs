@@ -12,7 +12,7 @@ namespace aoc14
       var data = File.ReadAllLines("input.txt");
 
       Console.WriteLine($"Part 1: the sum of the data in all the registers is {new Computer().Initialize(data).Registers.Values.Sum()}");
-      Console.WriteLine($"Part 1: the sum of the data in all the registers is {new Computer().Decode(data).Registers.Values.Sum()}");
+      Console.WriteLine($"Part 2: the sum of the data in all the registers is {new Computer().Decode(data).Registers.Values.Sum()}");
     }
 
     public class Computer
