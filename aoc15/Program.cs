@@ -11,25 +11,36 @@ namespace aoc15
     {
       var data = File.ReadAllLines("input.txt")[0].Split(",").Select(int.Parse).ToList();
 
-      Console.WriteLine($"Part 1: the 2020th spoken number is {new MemoryGame(data).Turn(2020)}");
+      Console.WriteLine($"Part 1: the 2020th spoken number is {MemoryGame.Turn(data, 2020)}");
+      Console.WriteLine($"Part 2: the 30000000th spoken number is {MemoryGame.Turn(data, 30000000)}");
     }
   }
 
-  public record MemoryGame(List<int> Numbers)
+  public class MemoryGame
   {
-    public int Turn(int turnNr)
+    public static int Turn(IList<int> input, int turnNr)
     {
-      while (Numbers.Count < turnNr)
-      {
-        var currentNumber = Numbers.Last();
-        var location = Numbers.LastIndexOf(currentNumber);
-        var olderLocation = Numbers.LastIndexOf(currentNumber, location - 1);
+      var numbers = new Dictionary<int, int>();
 
-        var newNumber = (olderLocation == -1) ? 0 : location - olderLocation;
-        Numbers.Add(newNumber);
+      for (int i = 0; i < input.Count; i++)
+      {
+        numbers.Add(input[i], i);
       }
 
-      return Numbers.Last();
+      var lastNumber = input.Last();
+
+      for (int i = numbers.Count; i < turnNr; i++)
+      {
+        var lastIndex = i - 1;
+        var nextNumber = numbers.ContainsKey(lastNumber)
+          ? lastIndex - numbers[lastNumber]
+          : 0;
+
+        numbers[lastNumber] = lastIndex;
+        lastNumber = nextNumber;
+      }
+
+      return lastNumber;
     }
   }
 }
