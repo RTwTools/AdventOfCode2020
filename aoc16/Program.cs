@@ -19,12 +19,72 @@ namespace aoc16
       }
 
       Console.WriteLine($"Part 1: the ticket scanning error rate is {nearbyTickets.Sum(t => t.Fields.Where(f => !f.Item2).Sum(t => t.Item1))}");
+
+      var validTickets = nearbyTickets.Where(t => t.Fields.All(f => f.Item2));
+      var myTicket = Ticket.Parse(data[(data.IndexOf("your ticket:") + 1)]);
+      var fieldNames = ticketValidator.FindFieldNames(validTickets);
+      var indexes = fieldNames.Where(f => f.Value.StartsWith("departure")).Select(f => f.Key);
+
+      Console.WriteLine($"Part 2: the values is  {indexes.Select(i => (long)myTicket.Fields[i].Item1).Aggregate((a, x) => a * x)}");
     }
   }
 
   public class TicketValidator
   {
     public Dictionary<string, List<(int start, int end)>> Rules { get; set; } = new Dictionary<string, List<(int start, int end)>>();
+
+    public Dictionary<int, string> FindFieldNames(IEnumerable<Ticket> tickets)
+    {
+      var fieldNames = new Dictionary<int, string>();
+
+      while (Rules.Any())
+      {
+        foreach (var rule in Rules)
+        {
+          int validId = -1;
+
+          for (int i = 0; i < tickets.First().Fields.Count; i++)
+          {
+            if (fieldNames.ContainsKey(i)) continue;
+
+            var values = tickets.Select(t => t.Fields[i].Item1);
+
+            var valid = true;
+
+            var rule1 = rule.Value.First();
+            var rule2 = rule.Value.Last();
+            valid &= values.All(v => ((rule1.start <= v && rule1.end >= v) || (rule2.start <= v && rule2.end >= v)));
+
+            if (valid)
+            {
+              if (validId != -1)
+              {
+                validId = -1;
+                break;
+              }
+              else
+              {
+                validId = i;
+              }
+            }
+          }
+
+          if (validId != -1)
+          {
+            fieldNames.Add(validId, rule.Key);
+          }
+        }
+
+        foreach (var name in fieldNames.Values)
+        {
+          Rules.Remove(name);
+        }
+      }
+
+      
+
+      return fieldNames;
+    }
 
     public void Validate(Ticket ticket)
     {
